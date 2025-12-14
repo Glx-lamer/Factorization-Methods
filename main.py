@@ -9,6 +9,12 @@ def getFirstPrimes(n):
         primes = list(map(int, fd.read().split()))[:n]
     return(primes)
 
+### ++Import Prime at position++ ###
+def getCurPrime(n):
+    with open("primes.txt", "r") as fd:
+        prime = list(map(int, fd.read().split()))[n - 1]
+    return(prime)
+
 ### ++POLLARD'S P-1 METHOD++ ###
 
 def pm1Pollard(n, B):
