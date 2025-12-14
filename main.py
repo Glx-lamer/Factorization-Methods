@@ -7,7 +7,7 @@ from random import randint
 def getFirstPrimes(n):
     with open("primes.txt", "r") as fd:
         primes = list(map(int, fd.read().split()))[:n]
-        print(primes)
+    return(primes)
 
 ### ++POLLARD'S P-1 METHOD++ ###
 
@@ -199,10 +199,10 @@ def CheckB(x, n, B):
     
 # Quadratic Sieve Method
 # B = {-1, 2, 3, ...}
-def QS(n, B, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
-    b = B.copy()
+def QS(n, P, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
+    b = getFirstPrimes(P)
     B = [-1, 2]
-    for p in b[2:]:
+    for p in b[1:]:
         if (LS(n, p) == 1):
             B.append(p)
     h = len(B) - 1
@@ -264,4 +264,4 @@ def CFRACC(n):
     
     return
 
-print(QS(1728239, [-1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31], 3))
+print(QS(1728239, 12, 3))
