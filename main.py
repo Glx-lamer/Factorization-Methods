@@ -3,6 +3,12 @@ from itertools import permutations
 from copy import deepcopy
 from random import randint
 
+### ++Import Prime Numbers++ ###
+def getFirstPrimes(n):
+    with open("primes.txt", "r") as fd:
+        primes = list(map(int, fd.read().split()))[:n]
+        print(primes)
+
 ### ++POLLARD'S P-1 METHOD++ ###
 
 def pm1Pollard(n, B):
@@ -210,7 +216,7 @@ def QS(n, B, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
     E = []
     S = []
     F = []
-    c = 20
+    c = floor(sqrt(sqrt(n)))
     while (len(X) < h + 2):
         for x in range(-c, c+1):
             G = 0
