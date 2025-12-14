@@ -231,35 +231,22 @@ def QS(n, B, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
     m = 0
     s = 1
     t = 1
-    while m < len(GTE[0]):
-        alp = [1 for x in range(len(GTE) - m + 1)] + [0 for x in range(m)]
-        permutationS = set(list(permutations(alp)))
-        for permutation in permutationS:
-            check = []
-            pp = []
-            GTE_ = deepcopy(GTE)
-            for i in range(len(GTE)):
-                for Nperm in range(len(GTE[0])):
-                    GTE_[i][Nperm] *= permutation[Nperm]
-            for i in range(len(GTE_)):
-                ch = sum(GTE_[i])
-                pp.append(ch)
-                check.append(ch % 2)
-            if 1 not in check:
-                s = 1
-                t = 1
-                for Nperm in range(len(GTE_[0])):
-                    if permutation[Nperm]: s *= S[Nperm]
-                for i in range(len(permutation)):
-                    if permutation[i] == 1:
-                        t*=F[i]
-                t = floor(sqrt(t))
-                s%=n
-                t%=n
-                if (s**2)%n == (t**2)%n:
-                    if s%n != t%n and s%n != n-t%n:
-                        return gcd(s-t, n)
-        m+=1
+    GTE_ = deepcopy(GTE)
+    Vectors = GaussSolve(GTE)
+    for K in Vectors:
+        s = 1
+        t = 1
+        for Nperm in range(len(K)):
+            if K[Nperm]: s *= S[Nperm]
+        for i in range(len(K)):
+            if K[i] == 1:
+                t*=F[i]
+        t = floor(sqrt(t))
+        s%=n
+        t%=n
+        if (s**2)%n == (t**2)%n:
+            if s%n != t%n and s%n != n-t%n:
+                return gcd(s-t, n)
 
 ### ++CONTINUED FRACTIONS METHOD++ ###
 
@@ -272,4 +259,3 @@ def CFRACC(n):
     return
 
 print(QS(1728239, [-1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31], 3))
-GaussSolve([9 for x in range(9)])
