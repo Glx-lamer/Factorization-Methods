@@ -231,15 +231,23 @@ def QS(n, P, Gs): # <n> - number, P - optimal h, <Gs> - "grid size"
     F = []
     c = P + 1
     while (len(X) < h + 2):
-        for x in range(-c, c+1):
-            G = 0
-            for comp in Comps:
+        pretenders = [[(x+floor(sqrt(n)))**2 - n, x] for x in range(-c, c+1)]
+        for comp in Comps:
+            for x in range(len(pretenders)):
                 if (x % comp[1] == comp[0]):
-                    G+=1
-            if (G >= Gs and x not in X):
-                BSmooth = CheckB(x, n, B)
+                    while (x < len(pretenders)):
+                        pretenders[x][0] -= log(comp[1])
+                        x += comp[1]
+        for i in range(len(pretenders)):
+            pretenders[i][0] = abs(pretenders[i][0])
+        pretenders.sort()
+        for i in range(len(pretenders)):
+            if i > 2*(h+2):
+                break
+            if pretenders[i][1] not in X:
+                BSmooth = CheckB(pretenders[i][1], n, B)
                 if BSmooth[0]:
-                    X.append(x)
+                    X.append(pretenders[i][1])
                     S.append(BSmooth[2])
                     E.append(BSmooth[1])
                     F.append(BSmooth[3])
@@ -272,7 +280,7 @@ def QS(n, P, Gs): # <n> - number, P - optimal h, <Gs> - "grid size"
         for i in range(len(K)):
             if K[i] == 1:
                 t*=F[i]
-        t = floor(sqrt(t))
+        t = floor(sqrt(abs(t)))
         s%=n
         t%=n
         if (s**2)%n == (t**2)%n:
@@ -289,6 +297,6 @@ def CFRACC(n):
     
     return
 
-n = 22079925932281979779
+n = 1728239
 
 print(QS(n, floor(exp(0.5 * sqrt(log(n) * log(log(n))))), 3))
