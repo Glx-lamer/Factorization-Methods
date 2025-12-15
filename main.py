@@ -1,13 +1,19 @@
-from math import gcd, log, floor, sqrt
+from math import gcd, log, floor, sqrt, exp
 from itertools import permutations
 from copy import deepcopy
 from random import randint
 
-### ++Import Prime Numbers++ ###
-def getFirstPrimes(n):
+### ++Import Prime Numbers Lower n++ ###
+def getFirstPrimesLower(n):
     with open("primes.txt", "r") as fd:
-        primes = list(map(int, fd.read().split()))[:n]
-    return(primes)
+        primes = list(map(int, fd.read().split()))
+        ind = 0
+        while (ind == 0):
+            try:
+                ind = primes.index(n)
+            except:
+                n-=1
+    return(primes[:ind])
 
 ### ++Import Prime at position++ ###
 def getCurPrime(n):
@@ -205,8 +211,9 @@ def CheckB(x, n, B):
     
 # Quadratic Sieve Method
 # B = {-1, 2, 3, ...}
-def QS(n, P, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
-    b = getFirstPrimes(P)
+def QS(n, P, Gs): # <n> - number, P - optimal h, <Gs> - "grid size"
+    b = getFirstPrimesLower(P)
+    PP = len(b)
     B = [-1, 2]
     for p in b[1:]:
         if (LS(n, p) == 1):
@@ -222,7 +229,7 @@ def QS(n, P, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
     E = []
     S = []
     F = []
-    c = floor(sqrt(sqrt(n)))
+    c = P + 1
     while (len(X) < h + 2):
         for x in range(-c, c+1):
             G = 0
@@ -236,14 +243,26 @@ def QS(n, P, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
                     S.append(BSmooth[2])
                     E.append(BSmooth[1])
                     F.append(BSmooth[3])
-        c+=1
-    c-=1
+        c+=P
+        if (c >= P**2):
+            while (True):
+                PP+=1
+                cur = getCurPrime(PP)
+                if (LS(n, cur) == 1):
+                    B.append(cur)
+                    res = SDC(n, cur)
+                    Comps.append([res[0], cur])
+                    Comps.append([res[1], cur])
+                    h+=1
+                    P = cur
+                    c = P + 1
+                    break
+        print(c)
+    c-=P
     TE = TM(E)
     GTE = GaussTransform(TE)
-    m = 0
     s = 1
     t = 1
-    GTE_ = deepcopy(GTE)
     Vectors = GaussSolve(GTE)
     for K in Vectors:
         s = 1
@@ -270,4 +289,6 @@ def CFRACC(n):
     
     return
 
-print(QS(1728239, 12, 3))
+n = 22079925932281979779
+
+print(QS(n, floor(exp(0.5 * sqrt(log(n) * log(log(n))))), 3))
