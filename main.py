@@ -1,5 +1,6 @@
-from math import gcd, log, floor, sqrt, exp
+from math import gcd, log, floor, sqrt, exp, ceil
 from random import randint
+from copy import deepcopy
 
 # Import prime numbers lower n
 def getFirstPrimesLower(n):
@@ -239,7 +240,8 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
     ExpE = []
     # Check "sieving" with "grid size" = 3 ("x" must satisfy not less than 3 solved comparisions)
     # A (in our designation - M) must satisfy P < A < P^2
-    M = max(B) + 1
+    P = max(B)
+    M = P + 1
     while (len(X) < h + 2):
         for x in range(-M, M + 1):
             g = 0
@@ -253,22 +255,26 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
                     S.append(IsBSmooth[2])
                     E.append(IsBSmooth[1])
                     ExpE.append(IsBSmooth[3])
-        M += max(B)
+        M += P
         # If M exceeded P^2, and h+2 "x" values not finded, need to increase B list
-        if (M > max(B)**2 and len(X) < h+2):
-            P = len(B)
-            cur = getCurPrime(P)
+        if (M > P**2 and len(X) < h+2):
+            H = len(B)
+            cur = getCurPrime(H)
             while (LS(n, cur) != 1):
-                P+=1
-                cur = getCurPrime(P)
+                H+=1
+                cur = getCurPrime(H)
             h+=1
+            P = cur
             B.append(cur)
             cursdcSol = SDC(n, cur)
             CompSolved.append([cursdcSol[0], cur])
             CompSolved.append([cursdcSol[1], cur])
-        print(len(X), h+2)
     # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
-    Vectors = GaussSolve(GaussTransform(TM(E)))
+    print(E)
+    TE = deepcopy(TM(E))
+    GTE = deepcopy(GaussTransform(TE))
+    Vectors = deepcopy(GaussSolve(GTE))
+    print(Vectors)
     for K in Vectors:
         s = 1
         t = 1
@@ -282,8 +288,8 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
             t *= B[i] ** (tVector[i]//2)
         s %= n
         t %= n
-        if ((s**2)%n == (t**2)%n or (s**2)%n == n - (t**2)%n):
-            if (s != t and s != n - t):
+        if ((s**2)%n == (t**2)%n):
+            if (s%n != t%n and s%n != n-t%n):
                 return gcd(s-t, n)
 
 ### ++CONTINUED FRACTIONS METHOD++ ###
@@ -296,8 +302,8 @@ def CFRACC(n):
     
     return
 
-n = 22079925932281979779
+n = 21299881
 
-p = QS(n, floor(exp(0.5 * sqrt(log(n) * log(log(n))))))
+p = QS(n, ceil(exp(0.5 * sqrt(log(n) * log(log(n))))))
 
 print(p, n/p)
