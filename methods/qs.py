@@ -1,22 +1,58 @@
-from math import gcd, log, floor, sqrt, exp, ceil
+from math import gcd, log, floor, sqrt
+from itertools import permutations
+from copy import deepcopy
+from random import randint
 
-# Import prime numbers lower n
-def getFirstPrimesLower(n):
+### ++Import Prime Numbers++ ###
+def getFirstPrimes(n):
     with open("primes.txt", "r") as fd:
-        primes = list(map(int, fd.read().split()))
-        ind = 0
-        while (ind == 0):
-            try:
-                ind = primes.index(n)
-            except:
-                n-=1
-    return(primes[:ind+1])
+        primes = list(map(int, fd.read().split()))[:n]
+        print(primes)
 
-# Import prime at position
-def getCurPrime(n):
-    with open("../primes.txt", "r") as fd:
-        prime = list(map(int, fd.read().split()))[n - 1]
-    return(prime)
+### ++POLLARD'S P-1 METHOD++ ###
+
+def pm1Pollard(n, B):
+    a = randint(2, n-2)
+    d = gcd(a, n)
+    if d > 1:
+        return d
+    for _ in B:
+        l = floor(log(n)/log(_))
+        a = pow(a, _**l, n)
+    d = gcd(a-1, n)
+    if d < n and d > 1:
+        return d
+    return -1
+
+### ++POLLARD'S RHO METHOD++ ###
+
+# Functions for random mapping
+def F1(x, n):
+    return pow(x*x + 1, 1, n)
+def F2(x, n):
+    return pow(x*x + 2, 1, n)
+def F3(x, n):
+    return pow(x*x + 3, 1, n)
+def F4(x, n):
+    return pow(x*x + 4, 1, n)
+def F5(x, n):
+    return pow(x*x + 5, 1, n)
+
+# Rho method
+def RhoPollard(n):
+    x = 1
+    y = x
+    while True:
+        x = F5(x, n)
+        y = F5(F5(x, n), n)
+        d = gcd(abs(x - y), n)
+        if d != 1:
+            if d == n:
+                return -1
+            else:
+                return d
+
+### ++QUADRATIC SIEVE METHOD++ ###
 
 # Transpose Matrix
 def TM(A):
@@ -145,22 +181,87 @@ def CheckB(x, n, B):
     s = x + floor(sqrt(n))
     f = s**2 - n
     E = []
-    ExpE = []
     for p in B[1:]:
         e = 0
         while (f % p == 0):
             e+=1
             f//=p
-        ExpE.append(e)
         E.append(e % 2)
     if (f < 0):
         f//=-1
         E = [1] + E
-        ExpE = [1] + ExpE
     else:
         E = [0] + E
-        ExpE = [0] + ExpE
     if (f == 1):
-        return [True, E, s, ExpE]
+        return [True, E, s, s**2 - n]
     else:
-        return [False, E, s, ExpE]
+        return [False, E, s, s**2 - n]
+    
+# Quadratic Sieve Method
+# B = {-1, 2, 3, ...}
+def QS(n, B, Gs): # <n> - number, <B> - prime nums list, <Gs> - "grid size"
+    b = B.copy()
+    B = [-1, 2]
+    for p in b[2:]:
+        if (LS(n, p) == 1):
+            B.append(p)
+    h = len(B) - 1
+    Comps = []
+    Comps.append([(n%2 - floor(sqrt(n)))%2, 2])
+    for _ in B[2:]:
+        res = SDC(n, _)
+        Comps.append([res[0], _])
+        Comps.append([res[1], _])
+    X = []
+    E = []
+    S = []
+    F = []
+    c = floor(sqrt(sqrt(n)))
+    while (len(X) < h + 2):
+        for x in range(-c, c+1):
+            G = 0
+            for comp in Comps:
+                if (x % comp[1] == comp[0]):
+                    G+=1
+            if (G >= Gs and x not in X):
+                BSmooth = CheckB(x, n, B)
+                if BSmooth[0]:
+                    X.append(x)
+                    S.append(BSmooth[2])
+                    E.append(BSmooth[1])
+                    F.append(BSmooth[3])
+        c+=1
+    c-=1
+    TE = TM(E)
+    GTE = GaussTransform(TE)
+    m = 0
+    s = 1
+    t = 1
+    GTE_ = deepcopy(GTE)
+    Vectors = GaussSolve(GTE)
+    for K in Vectors:
+        s = 1
+        t = 1
+        for Nperm in range(len(K)):
+            if K[Nperm]: s *= S[Nperm]
+        for i in range(len(K)):
+            if K[i] == 1:
+                t*=F[i]
+        t = floor(sqrt(t))
+        s%=n
+        t%=n
+        if (s**2)%n == (t**2)%n:
+            if s%n != t%n and s%n != n-t%n:
+                return gcd(s-t, n)
+
+### ++CONTINUED FRACTIONS METHOD++ ###
+
+# Continued fraction calculation
+def CFRACC(n):
+    A = []
+    a0 = floor(sqrt(n))
+    A.append(a0)
+    
+    return
+
+print(QS(1728239, [-1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31], 3))
