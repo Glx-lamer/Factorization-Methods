@@ -211,81 +211,8 @@ def CheckB(x, n, B):
     
 # Quadratic Sieve Method
 # B = {-1, 2, 3, ...}
-def QS(n, P, Gs): # <n> - number, P - optimal h, <Gs> - "grid size"
-    b = getFirstPrimesLower(P)
-    PP = len(b)
-    B = [-1, 2]
-    for p in b[1:]:
-        if (LS(n, p) == 1):
-            B.append(p)
-    h = len(B) - 1
-    Comps = []
-    Comps.append([(n%2 - floor(sqrt(n)))%2, 2])
-    for _ in B[2:]:
-        res = SDC(n, _)
-        Comps.append([res[0], _])
-        Comps.append([res[1], _])
-    X = []
-    E = []
-    S = []
-    F = []
-    c = P + 1
-    while (len(X) < h + 2):
-        pretenders = [[(x+floor(sqrt(n)))**2 - n, x] for x in range(-c, c+1)]
-        for comp in Comps:
-            for x in range(len(pretenders)):
-                if (x % comp[1] == comp[0]):
-                    while (x < len(pretenders)):
-                        pretenders[x][0] -= log(comp[1])
-                        x += comp[1]
-        for i in range(len(pretenders)):
-            pretenders[i][0] = abs(pretenders[i][0])
-        pretenders.sort()
-        for i in range(len(pretenders)):
-            if i > 2*(h+2):
-                break
-            if pretenders[i][1] not in X:
-                BSmooth = CheckB(pretenders[i][1], n, B)
-                if BSmooth[0]:
-                    X.append(pretenders[i][1])
-                    S.append(BSmooth[2])
-                    E.append(BSmooth[1])
-                    F.append(BSmooth[3])
-        c+=P
-        if (c >= P**2):
-            while (True):
-                PP+=1
-                cur = getCurPrime(PP)
-                if (LS(n, cur) == 1):
-                    B.append(cur)
-                    res = SDC(n, cur)
-                    Comps.append([res[0], cur])
-                    Comps.append([res[1], cur])
-                    h+=1
-                    P = cur
-                    c = P + 1
-                    break
-        print(c)
-    c-=P
-    TE = TM(E)
-    GTE = GaussTransform(TE)
-    s = 1
-    t = 1
-    Vectors = GaussSolve(GTE)
-    for K in Vectors:
-        s = 1
-        t = 1
-        for Nperm in range(len(K)):
-            if K[Nperm]: s *= S[Nperm]
-        for i in range(len(K)):
-            if K[i] == 1:
-                t*=F[i]
-        t = floor(sqrt(abs(t)))
-        s%=n
-        t%=n
-        if (s**2)%n == (t**2)%n:
-            if s%n != t%n and s%n != n-t%n:
-                return gcd(s-t, n)
+def QS(): # <n> - number, P - optimal h, <Gs> - "grid size"
+    return
 
 ### ++CONTINUED FRACTIONS METHOD++ ###
 
