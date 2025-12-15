@@ -1,9 +1,7 @@
 from math import gcd, log, floor, sqrt, exp
-from itertools import permutations
-from copy import deepcopy
 from random import randint
 
-### ++Import Prime Numbers Lower n++ ###
+# Import prime numbers lower n
 def getFirstPrimesLower(n):
     with open("primes.txt", "r") as fd:
         primes = list(map(int, fd.read().split()))
@@ -13,9 +11,9 @@ def getFirstPrimesLower(n):
                 ind = primes.index(n)
             except:
                 n-=1
-    return(primes[:ind])
+    return(primes[:ind+1])
 
-### ++Import Prime at position++ ###
+# Import prime at position
 def getCurPrime(n):
     with open("primes.txt", "r") as fd:
         prime = list(map(int, fd.read().split()))[n - 1]
@@ -193,90 +191,99 @@ def CheckB(x, n, B):
     s = x + floor(sqrt(n))
     f = s**2 - n
     E = []
+    ExpE = []
     for p in B[1:]:
         e = 0
         while (f % p == 0):
             e+=1
             f//=p
+        ExpE.append(e)
         E.append(e % 2)
     if (f < 0):
         f//=-1
         E = [1] + E
+        ExpE = [1] + ExpE
     else:
         E = [0] + E
+        ExpE = [0] + ExpE
     if (f == 1):
-        return [True, E, s, s**2 - n]
+        return [True, E, s, ExpE]
     else:
-        return [False, E, s, s**2 - n]
+        return [False, E, s, ExpE]
     
 # Quadratic Sieve Method
 # B = {-1, 2, 3, ...}
-def QS(n, P, Gs): # <n> - number, P - optimal h, <Gs> - "grid size"
-    b = getFirstPrimesLower(P)
-    PP = len(b)
+def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
+    # Get B list with prime numbers under P
     B = [-1, 2]
-    for p in b[1:]:
-        if (LS(n, p) == 1):
-            B.append(p)
+    B_ = getFirstPrimesLower(P)[1:]
+    for _ in B_:
+        if (LS(n, _) == 1):
+            B.append(_)
     h = len(B) - 1
-    Comps = []
-    Comps.append([(n%2 - floor(sqrt(n)))%2, 2])
-    for _ in B[2:]:
-        res = SDC(n, _)
-        Comps.append([res[0], _])
-        Comps.append([res[1], _])
+    # Need to get h + 2 "s" values ("S" list) -> need to get not less than h + 2 possible values of "x" ("X" list)
     X = []
-    E = []
     S = []
-    F = []
-    c = P + 1
+    # For any possible value "x" need to check f(x) = (x + [sqrt(n)])^2 - n for B-smoothing
+    # For optimization, all values f(x) cant be checked, so need to "sieve" them
+    # "Sieving" performed based on quadratic comparison modulo p from B (p - prime number)
+    # CompSolved - list with solutions of comparisons x^2 = a (mod p)
+    CompSolved = [] # [0] = a, [1] = p
+    CompSolved.append([n%2, 2]) # (mod 2) have only 1 solution
+    for p in B[2:]:
+        sdcSol = SDC(n, p) # 2 solutions for (mod p), p > 2
+        CompSolved.append([sdcSol[0], p])
+        CompSolved.append([sdcSol[1], p])
+    # For factorization n need "E" list of vectors "e", needed for calculating "s" and "t"
+    E = []
+    ExpE = []
+    # Check "sieving" with "grid size" = 3 ("x" must satisfy not less than 3 solved comparisions)
+    # A (in our designation - M) must satisfy P < A < P^2
+    M = max(B) + 1
     while (len(X) < h + 2):
-        for x in range(-c, c+1):
-            G = 0
-            for comp in Comps:
-                if (x % comp[1] == comp[0]):
-                    G+=1
-            if (G >= Gs and x not in X):
-                BSmooth = CheckB(x, n, B)
-                if BSmooth[0]:
+        for x in range(-M, M + 1):
+            g = 0
+            for comp in CompSolved:
+                if (x%comp[1] == comp[0]):
+                    g+=1
+            if (g >= 3 and x not in X):
+                IsBSmooth = CheckB(x, n, B)
+                if (IsBSmooth[0]):
                     X.append(x)
-                    S.append(BSmooth[2])
-                    E.append(BSmooth[1])
-                    F.append(BSmooth[3])
-        c+=P
-        if (c >= P**2):
-            while (True):
-                PP+=1
-                cur = getCurPrime(PP)
-                if (LS(n, cur) == 1):
-                    B.append(cur)
-                    res = SDC(n, cur)
-                    Comps.append([res[0], cur])
-                    Comps.append([res[1], cur])
-                    h+=1
-                    P = cur
-                    c = P + 1
-                    break
-        print(c)
-    c-=P
-    TE = TM(E)
-    GTE = GaussTransform(TE)
-    s = 1
-    t = 1
-    Vectors = GaussSolve(GTE)
+                    S.append(IsBSmooth[2])
+                    E.append(IsBSmooth[1])
+                    ExpE.append(IsBSmooth[3])
+        M += max(B)
+        # If M exceeded P^2, and h+2 "x" values not finded, need to increase B list
+        if (M > max(B)**2 and len(X) < h+2):
+            P = len(B)
+            cur = getCurPrime(P)
+            while (LS(n, cur) != 1):
+                P+=1
+                cur = getCurPrime(P)
+            h+=1
+            B.append(cur)
+            cursdcSol = SDC(n, cur)
+            CompSolved.append([cursdcSol[0], cur])
+            CompSolved.append([cursdcSol[1], cur])
+        print(len(X), h+2)
+    # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
+    Vectors = GaussSolve(GaussTransform(TM(E)))
     for K in Vectors:
         s = 1
         t = 1
-        for Nperm in range(len(K)):
-            if K[Nperm]: s *= S[Nperm]
+        tVector = [0 for x in range(len(B))]
         for i in range(len(K)):
-            if K[i] == 1:
-                t*=F[i]
-        t = floor(sqrt(t))
-        s%=n
-        t%=n
-        if (s**2)%n == (t**2)%n:
-            if s%n != t%n and s%n != n-t%n:
+            if (K[i] == 1):
+                s *= S[i]
+                for j in range(len(B)):
+                    tVector[j] += ExpE[i][j]
+        for i in range(len(tVector)):
+            t *= B[i] ** (tVector[i]//2)
+        s %= n
+        t %= n
+        if ((s**2)%n == (t**2)%n or (s**2)%n == n - (t**2)%n):
+            if (s != t and s != n - t):
                 return gcd(s-t, n)
 
 ### ++CONTINUED FRACTIONS METHOD++ ###
@@ -291,4 +298,6 @@ def CFRACC(n):
 
 n = 22079925932281979779
 
-print(QS(n, floor(exp(0.5 * sqrt(log(n) * log(log(n))))), 3))
+p = QS(n, floor(exp(0.5 * sqrt(log(n) * log(log(n))))))
+
+print(p, n/p)
