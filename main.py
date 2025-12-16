@@ -20,6 +20,19 @@ def getCurPrime(n):
         prime = list(map(int, fd.read().split()))[n - 1]
     return(prime)
 
+# Import prime number at next position
+def getNextPrime(n):
+    with open("primes.txt", "r") as fd:
+        primes = list(map(int, fd.read().split()))
+        ind = 0
+        n+=1
+        while (ind == 0):
+            try:
+                ind = primes.index(n)
+            except:
+                n+=1
+    return(primes[ind])
+
 ### ++POLLARD'S P-1 METHOD++ ###
 
 def pm1Pollard(n, B):
@@ -240,35 +253,24 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
     ExpE = []
     # Check "sieving" with "grid size" = 3 ("x" must satisfy not less than 3 solved comparisions)
     # A (in our designation - M) must satisfy P < A < P^2
-    P = max(B)
-    M = P + 1
-    while (len(X) < h + 2):
-        for x in range(-M, M + 1):
-            g = 0
-            for comp in CompSolved:
-                if (x%comp[1] == comp[0]):
-                    g+=1
-            if (g >= 3 and x not in X):
-                IsBSmooth = CheckB(x, n, B)
-                if (IsBSmooth[0]):
-                    X.append(x)
-                    S.append(IsBSmooth[2])
-                    E.append(IsBSmooth[1])
-                    ExpE.append(IsBSmooth[3])
-        M += P
-        # If M exceeded P^2, and h+2 "x" values not finded, need to increase B list
-        if (M > P**2 and len(X) < h+2):
-            H = len(B)
-            cur = getCurPrime(H)
-            while (LS(n, cur) != 1):
-                H+=1
-                cur = getCurPrime(H)
-            h+=1
-            P = cur
-            B.append(cur)
-            cursdcSol = SDC(n, cur)
-            CompSolved.append([cursdcSol[0], cur])
-            CompSolved.append([cursdcSol[1], cur])
+    M = (P+1) ** 3
+    flNsqrt = floor(sqrt(n))
+    logsTable = [[log(abs((x+flNsqrt)**2-n)), x] for x in range(-M, M+1)]
+    for comp in CompSolved:
+            for i in range(len(logsTable)):
+                if logsTable[i][1] % comp[1] == comp[0]:
+                    while i < len(logsTable):
+                        if logsTable[i][0] > 0:
+                            logsTable[i][0] -= log(comp[1])
+                        i+=comp[1]
+    logsTable.sort(key=lambda x: abs(x[0]))
+    for x in logsTable:
+        IsBSmooth = CheckB(x[1], n, B)
+        if (IsBSmooth[0]):
+            X.append(x[1])
+            S.append(IsBSmooth[2])
+            E.append(IsBSmooth[1])
+            ExpE.append(IsBSmooth[3])
     # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
     TE = deepcopy(TM(E))
     GTE = deepcopy(GaussTransform(TE))
@@ -300,13 +302,18 @@ def CFRACC(n):
     
     return
 
-n = 22079925932281979779
+nums_from_book = [5338771, 1557697, 1728239, 1373503, 1359331, 84257901, 8931721, 21299881]
+nums_from_var = [22079925932281979779]
 
-print(ceil(exp(0.5 * sqrt(log(n) * log(log(n))))))
-k = ceil(exp(0.5 * sqrt(log(n) * log(log(n)))))
+# n = nums_from_var[0]
+n = nums_from_book[0]
+
+print(ceil(pow(exp(sqrt(log(n) * log(log(n)))), sqrt(2)/4)))
+k = ceil(pow(exp(sqrt(log(n) * log(log(n)))), sqrt(2)/4))
 p = QS(n, k)
 while p == None:
-    k-=1
+    print(k)
+    k = getNextPrime(k)
     p = QS(n, k)
 
-print(p)
+print(p, n/p)
