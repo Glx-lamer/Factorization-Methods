@@ -271,6 +271,8 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
             S.append(IsBSmooth[2])
             E.append(IsBSmooth[1])
             ExpE.append(IsBSmooth[3])
+        if (len(X) > h+2):
+            break
     # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
     TE = deepcopy(TM(E))
     GTE = deepcopy(GaussTransform(TE))
