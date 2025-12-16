@@ -270,11 +270,9 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
             CompSolved.append([cursdcSol[0], cur])
             CompSolved.append([cursdcSol[1], cur])
     # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
-    print(E)
     TE = deepcopy(TM(E))
     GTE = deepcopy(GaussTransform(TE))
     Vectors = deepcopy(GaussSolve(GTE))
-    print(Vectors)
     for K in Vectors:
         s = 1
         t = 1
@@ -302,8 +300,13 @@ def CFRACC(n):
     
     return
 
-n = 21299881
+n = 22079925932281979779
 
-p = QS(n, ceil(exp(0.5 * sqrt(log(n) * log(log(n))))))
+print(ceil(exp(0.5 * sqrt(log(n) * log(log(n))))))
+k = ceil(exp(0.5 * sqrt(log(n) * log(log(n)))))
+p = QS(n, k)
+while p == None:
+    k-=1
+    p = QS(n, k)
 
-print(p, n/p)
+print(p)
