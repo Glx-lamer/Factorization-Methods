@@ -61,14 +61,16 @@ def F4(x, n):
     return pow(x*x + 4, 1, n)
 def F5(x, n):
     return pow(x*x + 5, 1, n)
+def f1(x, n):
+    return pow(x*x - 1, 1, n)
 
 # Rho method
 def RhoPollard(n):
-    x = 1
+    x = 2
     y = x
     while True:
-        x = F5(x, n)
-        y = F5(F5(x, n), n)
+        x = F4(x, n)
+        y = F4(F4(x, n), n)
         d = gcd(abs(x - y), n)
         if d != 1:
             if d == n:
@@ -311,16 +313,23 @@ def CFRACC(n):
     return
 
 nums_from_book = [5338771, 1557697, 1728239, 1373503, 1359331, 84257901, 8931721, 21299881]
-nums_from_var = [22079925932281979779, 925741396055058974259721588054691004169]
+nums_from_var = [22079925932281979779, 925741396055058974259721588054691004169, 13095931791231118218238929195468935130012661407529466966735480823189577913714929]
 
+# n = 323753361371434956225538624284907419437
 n = nums_from_var[1]
 # n = nums_from_book[-3]
-
+# for i in range(1, 100):
+#     print(i)
+#     p = pm1Pollard(n, getFirstPrimesLower(10**i))
+#     if p != -1:
+#         break
+# p = RhoPollard(n)
 k = ceil(sqrt(exp(sqrt(log(n) * log(log(n))))))
 print(k)
 p = QS(n, k)
 while p == None:
     k = getNextPrime(k)
     p = QS(n, k)
-
-print(p, n/p)
+q = n//p
+print(p, q)
+print(p*q == n)
