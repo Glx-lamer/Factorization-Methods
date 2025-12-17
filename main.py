@@ -307,8 +307,8 @@ def CFRACC(n):
 nums_from_book = [5338771, 1557697, 1728239, 1373503, 1359331, 84257901, 8931721, 21299881]
 nums_from_var = [22079925932281979779]
 
-# n = nums_from_var[0]
-n = nums_from_book[0]
+n = nums_from_var[0]
+# n = nums_from_book[-1]
 
 print(ceil(pow(exp(sqrt(log(n) * log(log(n)))), sqrt(2)/4)))
 k = ceil(pow(exp(sqrt(log(n) * log(log(n)))), sqrt(2)/4))
