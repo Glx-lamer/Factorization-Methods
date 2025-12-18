@@ -1,6 +1,8 @@
 from math import gcd, log, floor, sqrt, exp, ceil
 from random import randint
 from copy import deepcopy
+import time
+from tabulate import tabulate
 
 # Import prime numbers lower n
 def getFirstPrimesLower(n):
@@ -36,47 +38,67 @@ def getNextPrime(n):
 ### ++POLLARD'S P-1 METHOD++ ###
 
 def pm1Pollard(n, B):
-    a = randint(2, n-2)
-    d = gcd(a, n)
-    if d > 1:
-        return d
-    for _ in B:
-        l = floor(log(n)/log(_))
-        a = pow(a, _**l, n)
-    d = gcd(a-1, n)
-    if d < n and d > 1:
-        return d
-    return -1
+    with open("Pm1Pollard.log", "w") as logfd:
+        logfd.write(f"Started calculating {n} with h = {len(B)}.\n")
+        logfd.write(f"Prime number - l for number:\n")
+        start = time.time_ns()
+        a = randint(2, n-2)
+        d = gcd(a, n)
+        if d > 1:
+            return d
+        for _ in B:
+            l = floor(log(n)/log(_))
+            logfd.write(f"[{_}] - {l}\n")
+            a = pow(a, _**l, n)
+        d = gcd(a-1, n)
+        if d < n and d > 1:
+            logfd.write(f"Calculated: [{n == d * (n//d)}] {d} * {n//d} at {time.time_ns() - start}ns.")
+            return d
+        logfd.write(f"[!] Small B")
+        return -1
 
 ### ++POLLARD'S RHO METHOD++ ###
 
 # Functions for random mapping
-def F1(x, n):
-    return pow(x*x + 1, 1, n)
-def F2(x, n):
-    return pow(x*x + 2, 1, n)
-def F3(x, n):
-    return pow(x*x + 3, 1, n)
-def F4(x, n):
-    return pow(x*x + 4, 1, n)
-def F5(x, n):
-    return pow(x*x + 5, 1, n)
-def f1(x, n):
-    return pow(x*x - 1, 1, n)
+def Fn(x, n, id: str):
+    match id:
+        case "F1":
+            return [pow(x*x + 1, 1, n), "f(x) = x^2 + 1 (mod n)"]
+        case "F2":
+            return [pow(x*x + 2, 1, n), "f(x) = x^2 + 2 (mod n)"]
+        case "F3":
+            return [pow(x*x + 3, 1, n), "f(x) = x^2 + 3 (mod n)"]
+        case "F4":
+            return [pow(x*x + 4, 1, n), "f(x) = x^2 + 4 (mod n)"]
+        case "F5":
+            return [pow(x*x + 5, 1, n), "f(x) = x^2 + 5 (mod n)"]
+        case "f1":
+            return [pow(x*x - 1, 1, n), "f(x) = x^2 - 1 (mod n)"]
 
 # Rho method
 def RhoPollard(n):
-    x = 2
-    y = x
-    while True:
-        x = F4(x, n)
-        y = F4(F4(x, n), n)
-        d = gcd(abs(x - y), n)
-        if d != 1:
-            if d == n:
-                return -1
-            else:
-                return d
+    with open("RhoPollard.log", "w") as logfd:
+        x = 2
+        y = x
+        logfd.write(f"Started calculating {n} with x = {x}.\n")
+        logfd.write(f"[i] [Time] a -- b -- GCD(a-b, n):\n")
+        func = "f1"
+        logfd.write(f"Used function: {Fn(1, 1, func)[1]}")
+        start = time.time_ns()
+        i = 1
+        while True:
+            x = Fn(x, n, func)[0]
+            y = Fn(Fn(x, n, func)[0], n, func)[0]
+            d = gcd(abs(x - y), n)
+            logfd.write(f"[{i}] [{time.time_ns() - start}] {x} -- {y} -- {d}\n")
+            if d != 1:
+                if d == n:
+                    logfd.write(f"[!] Small B")
+                    return -1
+                else:
+                    logfd.write(f"Calculated: [{n == d * (n//d)}] {d} * {n//d} at {time.time_ns() - start}ns.")
+                    return d
+            i+=1
 
 ### ++QUADRATIC SIEVE METHOD++ ###
 
@@ -230,13 +252,17 @@ def CheckB(x, n, B):
 # Quadratic Sieve Method
 # B = {-1, 2, 3, ...}
 def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
+    logfd = open("QuadraticSieve.log", "w")
     # Get B list with prime numbers under P
     B = [-1, 2]
+    start = time.time_ns()
+    logfd.write(f"Started calculating {n}.\n")
     B_ = getFirstPrimesLower(P)[1:]
     for _ in B_:
         if (LS(n, _) == 1):
             B.append(_)
     h = len(B) - 1
+    logfd.write(f"Generated factorization base B len = {h} and last p = {B[-1]}.\n")
     # Need to get h + 2 "s" values ("S" list) -> need to get not less than h + 2 possible values of "x" ("X" list)
     X = []
     S = []
@@ -256,6 +282,7 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
     # Check "sieving" with "grid size" = 3 ("x" must satisfy not less than 3 solved comparisions)
     # A (in our designation - M) must satisfy P < A < P^2
     M = (ceil(pow(exp(sqrt(log(n) * log(log(n)))), sqrt(2)/4))+1) ** 3
+    logfd.write(f"Calculated M = {M} as M = B^3.\n")
     flNsqrt = floor(sqrt(n))
     logsTable = [[log(abs((x+flNsqrt)**2-n)), x] for x in range(-M, M+1)]
     for comp in CompSolved:
@@ -264,7 +291,6 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
                     while i <= M:
                         logsTable[M + i][0] -= log(comp[1])
                         logsTable[M - i][0] -= log(comp[1])
-                        print(f"{comp[1]}: {i}/{M}")
                         i+=comp[1]
                     break
     logsTable.sort(key=lambda x: abs(x[0]))
@@ -275,11 +301,10 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
             S.append(IsBSmooth[2])
             E.append(IsBSmooth[1])
             ExpE.append(IsBSmooth[3])
+            logfd.write(f"x = {x[1]}, f(x) = {(x[1]+floor(sqrt(n)))**2-n}, Alpha(x) = ({ExpE}).\n")
         if (len(X) >= h+2):
             break
     if (len(X) < h+2):
-        print(B)
-        print(CheckB(logsTable[0][1], n, B))
         return(1)
     # Find possible combinations of "e" vectors in "E" list with Gauss method for potential "s" and "t" values calculating
     TE = deepcopy(TM(E))
@@ -300,36 +325,23 @@ def QS(n, P): # <n> - number, <P> - optimal h, <Gs> - "grid size"
         t %= n
         if ((s**2)%n == (t**2)%n):
             if (s%n != t%n and s%n != n-t%n):
+                logfd.write(f"s = {s}, t = {t}.\n")
+                logfd.write(f"[{n == gcd(s-t, n)*n//gcd(s-t, n)}] {n} = {gcd(s-t, n)} * {n//gcd(s-t, n)} in {time.time_ns()-start} ns.\n")
+                logfd.close()
                 return gcd(s-t, n)
+    logfd.close()
 
-### ++CONTINUED FRACTIONS METHOD++ ###
-
-# Continued fraction calculation
-def CFRACC(n):
-    A = []
-    a0 = floor(sqrt(n))
-    A.append(a0)
-    
-    return
-
-nums_from_book = [5338771, 1557697, 1728239, 1373503, 1359331, 84257901, 8931721, 21299881]
 nums_from_var = [22079925932281979779, 925741396055058974259721588054691004169, 13095931791231118218238929195468935130012661407529466966735480823189577913714929]
 
-# n = 323753361371434956225538624284907419437
 n = nums_from_var[1]
-# n = nums_from_book[-3]
-# for i in range(1, 100):
-#     print(i)
-#     p = pm1Pollard(n, getFirstPrimesLower(10**i))
-#     if p != -1:
-#         break
 # p = RhoPollard(n)
+# p = pm1Pollard(n, getFirstPrimesLower(10**8))
 k = ceil(sqrt(exp(sqrt(log(n) * log(log(n))))))
-print(k)
+# print(k)
 p = QS(n, k)
 while p == None:
     k = getNextPrime(k)
     p = QS(n, k)
 q = n//p
-print(p, q)
-print(p*q == n)
+# print(p, q)
+# print(p*q == n)
